@@ -29,19 +29,26 @@ export default function RootLayout() {
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    if (error) throw error;
+    if (error) {
+      console.error('[RootLayout] Font loading error:', error);
+      // Hide splash screen even on error to prevent indefinite loading
+      SplashScreen.hideAsync().catch(console.error);
+    }
   }, [error]);
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      console.log('[RootLayout] Fonts loaded successfully');
+      SplashScreen.hideAsync().catch(console.error);
     }
   }, [loaded]);
 
-  if (!loaded) {
+  // Show nothing while loading (splash screen will be visible)
+  if (!loaded && !error) {
     return null;
   }
 
+  // Continue even if there's a font error - app can work without custom fonts
   return <RootLayoutNav />;
 }
 

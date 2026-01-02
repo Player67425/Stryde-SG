@@ -5,28 +5,85 @@ import { OnboardingData } from '@/types';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 export default function OnboardingScreen() {
+  console.log('[Onboarding] Component rendering');
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<Partial<OnboardingData>>({});
+  
+  React.useEffect(() => {
+    console.log('[Onboarding] Component mounted');
+  }, []);
 
   const updateData = (field: string, value: any) => {
-    setData({ ...data, [field]: value });
+    console.log(`[Onboarding] Updating ${field}:`, value);
+    
+    // Validate numeric inputs
+    if (['age', 'sleepHours', 'stressLevel', 'height', 'weight'].includes(field)) {
+      const numValue = parseInt(value);
+      
+      // Validate ranges
+      if (field === 'age') {
+        if (numValue < 12 || numValue > 19) {
+          console.warn('[Onboarding] Invalid age:', numValue);
+          Alert.alert('Invalid Age', 'Please enter an age between 12 and 19.');
+          return;
+        }
+      } else if (field === 'sleepHours') {
+        if (numValue < 1 || numValue > 24) {
+          console.warn('[Onboarding] Invalid sleep hours:', numValue);
+          Alert.alert('Invalid Input', 'Please enter sleep hours between 1 and 24.');
+          return;
+        }
+      } else if (field === 'stressLevel') {
+        if (numValue < 1 || numValue > 10) {
+          console.warn('[Onboarding] Invalid stress level:', numValue);
+          Alert.alert('Invalid Input', 'Please enter a stress level between 1 and 10.');
+          return;
+        }
+      } else if (field === 'height') {
+        if (numValue > 250) {
+          console.warn('[Onboarding] Invalid height:', numValue);
+          Alert.alert('Invalid Input', 'Please enter a valid height (max 250 cm).');
+          return;
+        }
+      } else if (field === 'weight') {
+        if (numValue > 300) {
+          console.warn('[Onboarding] Invalid weight:', numValue);
+          Alert.alert('Invalid Input', 'Please enter a valid weight (max 300 kg).');
+          return;
+        }
+      }
+      
+      // Only update if valid
+      if (!isNaN(numValue) && numValue > 0) {
+        setData({ ...data, [field]: numValue });
+      } else if (value === '') {
+        // Allow clearing the field
+        setData({ ...data, [field]: undefined });
+      }
+    } else {
+      // Non-numeric fields
+      setData({ ...data, [field]: value });
+    }
   };
 
   const saveAndContinue = async () => {
+    console.log('[Onboarding] saveAndContinue called, step:', step);
     if (step < 3) {
       setStep(step + 1);
     } else {
       try {
+        console.log('[Onboarding] Saving data:', data);
         const completeData: OnboardingData = {
           ...data as OnboardingData,
           onboardingComplete: true,
           tutorialComplete: false,
         };
         await storage.save(STORAGE_KEYS.ONBOARDING, completeData);
+        console.log('[Onboarding] Data saved, navigating to tutorial');
         router.replace('/tutorial');
       } catch (error) {
-        console.error('Error saving onboarding data:', error);
+        console.error('[Onboarding] Error saving onboarding data:', error);
         Alert.alert('Error', 'Failed to save data. Please try again.');
       }
     }
