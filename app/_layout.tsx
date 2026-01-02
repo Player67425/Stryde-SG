@@ -1,13 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,33 +47,11 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const router = useRouter();
-  const segments = useSegments();
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      const onboardingData = await storage.load(STORAGE_KEYS.ONBOARDING) as any;
-      
-      if (!onboardingData || !onboardingData.onboardingComplete) {
-        router.replace('/onboarding');
-      } else if (!onboardingData.tutorialComplete) {
-        router.replace('/tutorial');
-      }
-      
-      setIsReady(true);
-    };
-
-    checkOnboarding();
-  }, []);
-
-  if (!isReady) {
-    return null;
-  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="tutorial" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
