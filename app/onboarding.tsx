@@ -17,20 +17,34 @@ export default function OnboardingScreen() {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      const completeData: OnboardingData = {
-        ...data as OnboardingData,
-        onboardingComplete: true,
-        tutorialComplete: false,
-      };
-      await storage.save(STORAGE_KEYS.ONBOARDING, completeData);
-      router.replace('/tutorial');
+      try {
+        const completeData: OnboardingData = {
+          ...data as OnboardingData,
+          onboardingComplete: true,
+          tutorialComplete: false,
+        };
+        await storage.save(STORAGE_KEYS.ONBOARDING, completeData);
+        router.replace('/tutorial');
+      } catch (error) {
+        console.error('Error saving onboarding data:', error);
+        Alert.alert('Error', 'Failed to save data. Please try again.');
+      }
     }
   };
 
   const canContinue = () => {
-    if (step === 1) return data.age && data.activityLevel && data.sleepHours;
-    if (step === 2) return data.stressLevel && data.primaryGoal;
-    if (step === 3) return data.dietaryPreference;
+    if (step === 1) {
+      return data.age && data.age >= 12 && data.age <= 19 && 
+             data.activityLevel && 
+             data.sleepHours && data.sleepHours > 0;
+    }
+    if (step === 2) {
+      return data.stressLevel && data.stressLevel >= 1 && data.stressLevel <= 10 && 
+             data.primaryGoal;
+    }
+    if (step === 3) {
+      return data.dietaryPreference;
+    }
     return false;
   };
 
@@ -45,8 +59,21 @@ export default function OnboardingScreen() {
       {step === 1 && (
         <View style={styles.section}>
           <Text style={styles.label}>Age (12-19) *</Text>
-          <TextInput style={styles.input} keyboardType="number-pad" value={data.age?.toString() || ''} 
-            onChangeText={(text) => updateData('age', parseInt(text) || 0)} placeholder="Enter your age" />
+          <TextInput 
+            style={styles.input} 
+            keyboardType="number-pad" 
+            value={data.age?.toString() || ''} 
+            onChangeText={(text) => {
+              const age = parseInt(text);
+              if (!text) {
+                updateData('age', undefined);
+              } else if (!isNaN(age) && age >= 12 && age <= 19) {
+                updateData('age', age);
+              }
+            }} 
+            placeholder="Enter your age (12-19)" 
+            maxLength={2}
+          />
 
           <Text style={styles.label}>Activity Level *</Text>
           <View style={styles.buttonGroup}>
@@ -59,18 +86,57 @@ export default function OnboardingScreen() {
           </View>
 
           <Text style={styles.label}>Average Sleep Hours *</Text>
-          <TextInput style={styles.input} keyboardType="number-pad" value={data.sleepHours?.toString() || ''}
-            onChangeText={(text) => updateData('sleepHours', parseInt(text) || 0)} placeholder="e.g., 7" />
+          <TextInput 
+            style={styles.input} 
+            keyboardType="number-pad" 
+            value={data.sleepHours?.toString() || ''}
+            onChangeText={(text) => {
+              const hours = parseInt(text);
+              if (!text) {
+                updateData('sleepHours', undefined);
+              } else if (!isNaN(hours) && hours > 0 && hours <= 24) {
+                updateData('sleepHours', hours);
+              }
+            }} 
+            placeholder="e.g., 7" 
+            maxLength={2}
+          />
 
           <Text style={styles.label}>Height (cm)</Text>
           <Text style={styles.helperText}>ⓘ Highly recommended for better accuracy</Text>
-          <TextInput style={styles.input} keyboardType="number-pad" value={data.height?.toString() || ''}
-            onChangeText={(text) => updateData('height', text ? parseInt(text) : undefined)} placeholder="Optional" />
+          <TextInput 
+            style={styles.input} 
+            keyboardType="number-pad" 
+            value={data.height?.toString() || ''}
+            onChangeText={(text) => {
+              const height = parseInt(text);
+              if (!text) {
+                updateData('height', undefined);
+              } else if (!isNaN(height) && height > 0 && height <= 250) {
+                updateData('height', height);
+              }
+            }} 
+            placeholder="Optional" 
+            maxLength={3}
+          />
 
           <Text style={styles.label}>Weight (kg)</Text>
           <Text style={styles.helperText}>ⓘ Highly recommended for better accuracy</Text>
-          <TextInput style={styles.input} keyboardType="number-pad" value={data.weight?.toString() || ''}
-            onChangeText={(text) => updateData('weight', text ? parseInt(text) : undefined)} placeholder="Optional" />
+          <TextInput 
+            style={styles.input} 
+            keyboardType="number-pad" 
+            value={data.weight?.toString() || ''}
+            onChangeText={(text) => {
+              const weight = parseInt(text);
+              if (!text) {
+                updateData('weight', undefined);
+              } else if (!isNaN(weight) && weight > 0 && weight <= 300) {
+                updateData('weight', weight);
+              }
+            }} 
+            placeholder="Optional" 
+            maxLength={3}
+          />
 
           <Text style={styles.label}>Sex</Text>
           <Text style={styles.helperText}>ⓘ Highly recommended for accurate targets and insights</Text>
@@ -88,8 +154,21 @@ export default function OnboardingScreen() {
       {step === 2 && (
         <View style={styles.section}>
           <Text style={styles.label}>Stress Level (1-10) *</Text>
-          <TextInput style={styles.input} keyboardType="number-pad" value={data.stressLevel?.toString() || ''}
-            onChangeText={(text) => updateData('stressLevel', Math.min(10, parseInt(text) || 0))} placeholder="1 (low) to 10 (high)" />
+          <TextInput 
+            style={styles.input} 
+            keyboardType="number-pad" 
+            value={data.stressLevel?.toString() || ''}
+            onChangeText={(text) => {
+              const stress = parseInt(text);
+              if (!text) {
+                updateData('stressLevel', undefined);
+              } else if (!isNaN(stress) && stress >= 1 && stress <= 10) {
+                updateData('stressLevel', stress);
+              }
+            }} 
+            placeholder="1 (low) to 10 (high)" 
+            maxLength={2}
+          />
 
           <Text style={styles.label}>Primary Goal *</Text>
           {['Energy & mood', 'Fitness & performance', 'Healthier habits', 'Healthy weight management'].map((goal) => (
@@ -133,16 +212,16 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#fff', marginBottom: 16 },
   stepIndicator: { fontSize: 14, color: '#fff', opacity: 0.9 },
-  section: { padding: 20 },
+  section: { padding: 20, flexGrow: 1 },
   label: { fontSize: 16, fontWeight: '600', marginTop: 16, marginBottom: 8, color: '#333' },
   helperText: { fontSize: 13, color: '#666', fontStyle: 'italic', marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16 },
-  buttonGroup: { flexDirection: 'row', gap: 10 },
-  optionButton: { flex: 1, padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center' },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
+  buttonGroup: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+  optionButton: { flex: 1, minWidth: 80, padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center' },
   optionButtonSelected: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
   optionText: { fontSize: 14, color: '#333' },
   optionTextSelected: { color: '#fff', fontWeight: '600' },
-  goalOption: { padding: 16, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 10 },
+  goalOption: { padding: 16, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' },
   goalOptionSelected: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
   goalText: { fontSize: 16, color: '#333' },
   goalTextSelected: { color: '#fff', fontWeight: '600' },
