@@ -3,7 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -26,6 +26,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const [forceRender, setForceRender] = React.useState(false);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -43,8 +44,22 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  // Add timeout to force render after 3 seconds if fonts don't load
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!loaded && !error) {
+        console.warn('[RootLayout] Font loading timeout - forcing render');
+        setForceRender(true);
+        SplashScreen.hideAsync().catch(console.error);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [loaded, error]);
+
   // Show nothing while loading (splash screen will be visible)
-  if (!loaded && !error) {
+  // But force render after timeout
+  if (!loaded && !error && !forceRender) {
     return null;
   }
 
