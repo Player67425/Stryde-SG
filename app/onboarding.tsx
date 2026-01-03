@@ -121,7 +121,9 @@ export default function OnboardingScreen() {
     if (step === 1) {
       return data.age && data.age >= 12 && data.age <= 19 && 
              data.activityLevel && 
-             data.sleepHours && data.sleepHours > 0;
+             data.sleepHours && data.sleepHours > 0 &&
+             data.height && data.height > 0 &&
+             data.weight && data.weight > 0;
     }
     if (step === 2) {
       return data.stressLevel && data.stressLevel >= 1 && data.stressLevel <= 10 && 
@@ -188,12 +190,11 @@ export default function OnboardingScreen() {
                 }
               }
             }} 
-            placeholder="e.g. 7 or 8" 
+            placeholder="e.g, 7h" 
             maxLength={2}
           />
 
-          <Text style={styles.label}>Height (cm)</Text>
-          <Text style={styles.helperText}>ⓘ Highly recommended for better accuracy</Text>
+          <Text style={styles.label}>Height (cm) *</Text>
           <TextInput 
             style={styles.input} 
             keyboardType="number-pad" 
@@ -209,12 +210,11 @@ export default function OnboardingScreen() {
                 }
               }
             }} 
-            placeholder="Optional" 
+            placeholder="e.g, 175cm" 
             maxLength={3}
           />
 
-          <Text style={styles.label}>Weight (kg)</Text>
-          <Text style={styles.helperText}>ⓘ Highly recommended for better accuracy</Text>
+          <Text style={styles.label}>Weight (kg) *</Text>
           <TextInput 
             style={styles.input} 
             keyboardType="number-pad" 
@@ -230,7 +230,7 @@ export default function OnboardingScreen() {
                 }
               }
             }} 
-            placeholder="Optional" 
+            placeholder="e.g, 67kg" 
             maxLength={3}
           />
 
