@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { OnboardingData } from '@/types';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
@@ -9,6 +9,9 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<Partial<OnboardingData>>({});
+  const [stressInputMode, setStressInputMode] = useState<'range' | 'specific'>('range');
+  const [goalInfoVisible, setGoalInfoVisible] = useState<string | null>(null);
+  const [goalRanks, setGoalRanks] = useState<{[key: string]: number}>({});
   
   React.useEffect(() => {
     console.log('[Onboarding] Component mounted');
@@ -35,9 +38,9 @@ export default function OnboardingScreen() {
           return;
         }
       } else if (field === 'stressLevel') {
-        if (numValue < 1 || numValue > 10) {
+        if (numValue < 0 || numValue > 10) {
           console.warn('[Onboarding] Invalid stress level:', numValue);
-          Alert.alert('Invalid Input', 'Please enter a stress level between 1 and 10.');
+          Alert.alert('Invalid Input', 'Please enter a stress level between 0 and 10.');
           return;
         }
       } else if (field === 'height') {
@@ -91,8 +94,8 @@ export default function OnboardingScreen() {
     }
     
     if (step === 2) {
-      if (data.stressLevel && (data.stressLevel < 1 || data.stressLevel > 10)) {
-        Alert.alert('Invalid Input', 'Please enter a stress level between 1 and 10.');
+      if (data.stressLevel !== undefined && (data.stressLevel < 0 || data.stressLevel > 10)) {
+        Alert.alert('Invalid Input', 'Please enter a stress level between 0 and 10.');
         return;
       }
     }
@@ -117,6 +120,22 @@ export default function OnboardingScreen() {
     }
   };
 
+  const toggleGoalRank = (goal: string) => {
+    const currentRanks = { ...goalRanks };
+    if (currentRanks[goal]) {
+      // Already ranked, remove it
+      delete currentRanks[goal];
+    } else {
+      // Assign next rank
+      const nextRank = Object.keys(currentRanks).length + 1;
+      currentRanks[goal] = nextRank;
+    }
+    setGoalRanks(currentRanks);
+    // Store the top priority as primaryGoal for backward compatibility
+    const topGoal = Object.entries(currentRanks).find(([_, rank]) => rank === 1)?.[0];
+    updateData('primaryGoal', topGoal || '');
+  };
+
   const canContinue = () => {
     if (step === 1) {
       return data.age && data.age >= 12 && data.age <= 19 && 
@@ -126,8 +145,8 @@ export default function OnboardingScreen() {
              data.weight && data.weight > 0;
     }
     if (step === 2) {
-      return data.stressLevel && data.stressLevel >= 1 && data.stressLevel <= 10 && 
-             data.primaryGoal;
+      return data.stressLevel && data.stressLevel >= 0 && data.stressLevel <= 10 && 
+             Object.keys(goalRanks).length > 0;
     }
     if (step === 3) {
       return data.dietaryPreference;
@@ -270,32 +289,121 @@ export default function OnboardingScreen() {
 
       {step === 2 && (
         <View style={styles.section}>
-          <Text style={styles.label}>Stress Level (1-10) *</Text>
-          <TextInput 
-            style={styles.input} 
-            keyboardType="number-pad" 
-            value={data.stressLevel?.toString() || ''}
-            onChangeText={(text) => {
-              // Allow empty string or valid numbers
-              if (text === '') {
-                setData({ ...data, stressLevel: undefined });
-              } else {
-                const stress = parseInt(text);
-                if (!isNaN(stress) && stress >= 0) {
-                  setData({ ...data, stressLevel: stress });
-                }
-              }
-            }} 
-            placeholder="1 (low) to 10 (high)" 
-            maxLength={2}
-          />
-
-          <Text style={styles.label}>Primary Goal *</Text>
-          {['Energy & mood', 'Fitness & performance', 'Healthier habits', 'Healthy weight management'].map((goal) => (
-            <TouchableOpacity key={goal} style={[styles.goalOption, data.primaryGoal === goal && styles.goalOptionSelected]}
-              onPress={() => updateData('primaryGoal', goal)}>
-              <Text style={[styles.goalText, data.primaryGoal === goal && styles.goalTextSelected]}>{goal}</Text>
+          <Text style={styles.label}>Stress Level (0-10) *</Text>
+          <View style={styles.stressModeToggle}>
+            <TouchableOpacity 
+              style={[styles.modeButton, stressInputMode === 'range' && styles.modeButtonSelected]}
+              onPress={() => setStressInputMode('range')}>
+              <Text style={[styles.modeButtonText, stressInputMode === 'range' && styles.modeButtonTextSelected]}>Ranges</Text>
             </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.modeButton, stressInputMode === 'specific' && styles.modeButtonSelected]}
+              onPress={() => setStressInputMode('specific')}>
+              <Text style={[styles.modeButtonText, stressInputMode === 'specific' && styles.modeButtonTextSelected]}>Specific</Text>
+            </TouchableOpacity>
+          </View>
+
+          {stressInputMode === 'range' ? (
+            <View style={styles.stressRangeContainer}>
+              {[
+                { range: '0-2', label: 'Very Low', value: 1 },
+                { range: '2-4', label: 'Low', value: 3 },
+                { range: '4-6', label: 'Moderate', value: 5 },
+                { range: '6-8', label: 'High', value: 7 },
+                { range: '8-10', label: 'Very High', value: 9 }
+              ].map((item) => (
+                <TouchableOpacity 
+                  key={item.range} 
+                  style={[styles.stressRangeButton, data.stressLevel === item.value && styles.stressRangeButtonSelected]}
+                  onPress={() => updateData('stressLevel', item.value)}>
+                  <Text style={[styles.stressRangeText, data.stressLevel === item.value && styles.stressRangeTextSelected]}>
+                    {item.range}
+                  </Text>
+                  <Text style={[styles.stressRangeLabel, data.stressLevel === item.value && styles.stressRangeLabelSelected]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <TextInput 
+              style={styles.input} 
+              keyboardType="number-pad" 
+              value={data.stressLevel?.toString() || ''}
+              onChangeText={(text) => {
+                if (text === '') {
+                  setData({ ...data, stressLevel: undefined });
+                } else {
+                  const stress = parseInt(text);
+                  if (!isNaN(stress) && stress >= 0 && stress <= 10) {
+                    setData({ ...data, stressLevel: stress });
+                  }
+                }
+              }} 
+              placeholder="Enter 0-10" 
+              maxLength={2}
+            />
+          )}
+
+          <Text style={styles.label}>Your Health Goals (Rank Your Priorities) *</Text>
+          <Text style={styles.helperText}>Tap to rank (1 = highest priority)</Text>
+          {[
+            { 
+              goal: 'Living a healthier life', 
+              info: 'Better energy, mood, and healthier daily habits'
+            },
+            { 
+              goal: 'Fitness and performance', 
+              info: 'Greater strength, endurance, speed, etc.'
+            },
+            { 
+              goal: 'Healthy weight management', 
+              info: 'Reach your ideal weight goals'
+            }
+          ].map(({ goal, info }) => (
+            <View key={goal}>
+              <TouchableOpacity 
+                style={[styles.goalOption, goalRanks[goal] && styles.goalOptionSelected]}
+                onPress={() => toggleGoalRank(goal)}>
+                <View style={styles.goalHeader}>
+                  <View style={styles.goalTitleContainer}>
+                    {goalRanks[goal] && (
+                      <View style={styles.rankBadge}>
+                        <Text style={styles.rankBadgeText}>{goalRanks[goal]}</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.goalText, goalRanks[goal] && styles.goalTextSelected]}>
+                      {goal}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.infoButton}
+                    onPress={() => setGoalInfoVisible(goal)}>
+                    <Text style={styles.infoButtonText}>ⓘ</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+              <Modal
+                transparent
+                visible={goalInfoVisible === goal}
+                onRequestClose={() => setGoalInfoVisible(null)}
+                animationType="fade">
+                <TouchableOpacity 
+                  style={styles.modalOverlay}
+                  activeOpacity={1}
+                  onPress={() => setGoalInfoVisible(null)}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>{goal}</Text>
+                    <Text style={styles.modalText}>{info}</Text>
+                    <TouchableOpacity 
+                      style={styles.modalButton}
+                      onPress={() => setGoalInfoVisible(null)}>
+                      <Text style={styles.modalButtonText}>Got it</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            </View>
           ))}
         </View>
       )}
@@ -363,8 +471,32 @@ const styles = StyleSheet.create({
   optionTextSelected: { color: '#fff', fontWeight: '600' },
   goalOption: { padding: 16, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' },
   goalOptionSelected: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
-  goalText: { fontSize: 16, color: '#333' },
+  goalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  goalTitleContainer: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  goalText: { fontSize: 16, color: '#333', flex: 1 },
   goalTextSelected: { color: '#fff', fontWeight: '600' },
+  rankBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  rankBadgeText: { fontSize: 16, fontWeight: 'bold', color: '#4A90E2' },
+  infoButton: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
+  infoButtonText: { fontSize: 20, color: '#666' },
+  stressModeToggle: { flexDirection: 'row', marginBottom: 12, gap: 10 },
+  modeButton: { flex: 1, padding: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center', backgroundColor: '#fff' },
+  modeButtonSelected: { backgroundColor: '#E8F4FF', borderColor: '#4A90E2' },
+  modeButtonText: { fontSize: 14, color: '#666' },
+  modeButtonTextSelected: { color: '#4A90E2', fontWeight: '600' },
+  stressRangeContainer: { gap: 8 },
+  stressRangeButton: { padding: 14, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, backgroundColor: '#fff', alignItems: 'center' },
+  stressRangeButtonSelected: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
+  stressRangeText: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 2 },
+  stressRangeTextSelected: { color: '#fff' },
+  stressRangeLabel: { fontSize: 13, color: '#666' },
+  stressRangeLabelSelected: { color: '#fff', opacity: 0.9 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 12, padding: 24, maxWidth: 400, width: '100%' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 12 },
+  modalText: { fontSize: 16, color: '#666', lineHeight: 24, marginBottom: 20 },
+  modalButton: { backgroundColor: '#4A90E2', padding: 12, borderRadius: 8, alignItems: 'center' },
+  modalButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
   continueButton: { margin: 20, padding: 16, backgroundColor: '#4A90E2', borderRadius: 8, alignItems: 'center' },
   continueButtonDisabled: { backgroundColor: '#ccc' },
   continueButtonText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
