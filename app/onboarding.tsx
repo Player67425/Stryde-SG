@@ -188,7 +188,7 @@ export default function OnboardingScreen() {
                 }
               }
             }} 
-            placeholder="e.g., 7" 
+            placeholder="e.g. 7 or 8" 
             maxLength={2}
           />
 
