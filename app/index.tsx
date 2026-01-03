@@ -21,14 +21,14 @@ export default function Index() {
       
       // Validate data structure
       if (!onboardingData || typeof onboardingData !== 'object') {
-        console.log('[Index] No valid data found, navigating to onboarding');
-        setTimeout(() => router.replace('/onboarding'), 100);
+        console.log('[Index] No valid data found, navigating to welcome screen');
+        setTimeout(() => router.replace('/welcome'), 100);
         return;
       }
       
       if (!onboardingData.onboardingComplete) {
-        console.log('[Index] Onboarding not complete, navigating to onboarding');
-        setTimeout(() => router.replace('/onboarding'), 100);
+        console.log('[Index] Onboarding not complete, navigating to welcome screen');
+        setTimeout(() => router.replace('/welcome'), 100);
       } else if (!onboardingData.tutorialComplete) {
         console.log('[Index] Tutorial not complete, navigating to tutorial');
         setTimeout(() => router.replace('/tutorial'), 100);
@@ -38,9 +38,9 @@ export default function Index() {
       }
     } catch (error) {
       console.error('[Index] Error checking onboarding:', error);
-      // Storage error or corrupted data - fallback to onboarding
-      console.log('[Index] Storage error, falling back to onboarding');
-      setTimeout(() => router.replace('/onboarding'), 100);
+      // Storage error or corrupted data - fallback to welcome screen
+      console.log('[Index] Storage error, falling back to welcome screen');
+      setTimeout(() => router.replace('/welcome'), 100);
     } finally {
       setTimeout(() => setIsChecking(false), 50);
     }
