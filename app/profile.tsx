@@ -54,15 +54,27 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert(
       'Log Out',
-      'Are you sure you want to log out? Your data will be saved locally.',
+      'Are you sure you want to log out? Your data is saved and will be available when you log back in.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Log Out',
           style: 'destructive',
           onPress: async () => {
-            Alert.alert('Logged Out', 'You have been logged out. (Demo mode - data is saved locally)');
-            router.replace('/');
+            try {
+              // Clear current user but keep account data
+              await storage.remove(STORAGE_KEYS.CURRENT_USER);
+              await storage.remove(STORAGE_KEYS.AUTH_COMPLETE);
+              Alert.alert('Logged Out', 'You have been logged out successfully.', [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/welcome'),
+                },
+              ]);
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to log out. Please try again.');
+            }
           },
         },
       ]

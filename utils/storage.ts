@@ -19,6 +19,10 @@ const STORAGE_KEYS = {
   APP_SETTINGS: '@stryde_app_settings',
   NOTIFICATIONS: '@stryde_notifications',
   STREAKS: '@stryde_streaks',
+  ACCOUNTS: '@stryde_accounts',
+  CURRENT_USER: '@stryde_current_user',
+  AUTH_COMPLETE: '@stryde_auth_complete',
+  TUTORIAL_COMPLETE: '@stryde_tutorial_complete',
 };
 
 export const storage = {

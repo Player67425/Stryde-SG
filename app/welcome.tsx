@@ -1,23 +1,91 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 export default function WelcomeScreen() {
-  console.log('[Welcome] Component rendering');
   const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const authComplete = await storage.load(STORAGE_KEYS.AUTH_COMPLETE);
+      const currentUser = await storage.load(STORAGE_KEYS.CURRENT_USER);
+      
+      if (authComplete && currentUser) {
+        // User is logged in, check progress
+        const onboarding = await storage.load(STORAGE_KEYS.ONBOARDING);
+        const tutorialComplete = await storage.load(STORAGE_KEYS.TUTORIAL_COMPLETE);
+        
+        if (onboarding?.completed && tutorialComplete) {
+          router.replace('/(tabs)');
+        } else if (onboarding?.completed) {
+          router.replace('/tutorial');
+        } else {
+          router.replace('/onboarding');
+        }
+      } else {
+        // Not logged in, stay on welcome
+        setIsChecking(false);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setIsChecking(false);
+    }
+  };
 
   const handleGetStarted = () => {
-    console.log('[Welcome] Get Started button pressed');
-    router.replace('/onboarding');
+    router.push('/signup');
   };
+
+  const handleLogin = () => {
+    router.push('/login');
+  };
+
+  if (isChecking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#50C878" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logo}>💪</Text>
+          <Text style={styles.appName}>STRYDE SG</Text>
+        </View>
+        
         <Text style={styles.title}>Welcome to Stryde SG</Text>
         <Text style={styles.subtitle}>
           Empowering teens to flourish—one Stryde at a time
         </Text>
+        
+        <View style={styles.features}>
+          <View style={styles.feature}>
+            <Text style={styles.featureIcon}>📚</Text>
+            <Text style={styles.featureText}>Learn from science-backed content</Text>
+          </View>
+          <View style={styles.feature}>
+            <Text style={styles.featureIcon}>📊</Text>
+            <Text style={styles.featureText}>Track your wellness journey</Text>
+          </View>
+          <View style={styles.feature}>
+            <Text style={styles.featureIcon}>🤝</Text>
+            <Text style={styles.featureText}>Connect with your community</Text>
+          </View>
+          <View style={styles.feature}>
+            <Text style={styles.featureIcon}>✍️</Text>
+            <Text style={styles.featureText}>Reflect on your progress</Text>
+          </View>
+        </View>
         
         <TouchableOpacity 
           style={styles.button}
@@ -25,6 +93,19 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.loginButton}
+          onPress={handleLogin}
+        >
+          <Text style={styles.loginButtonText}>Already have an account? Log In</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          🔒 All your data stays private on your device
+        </Text>
       </View>
     </View>
   );
@@ -33,33 +114,82 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 32,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logo: {
+    fontSize: 80,
+    marginBottom: 12,
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#50C878',
+    letterSpacing: 2,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#333',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 60,
-    lineHeight: 26,
+    marginBottom: 40,
+    lineHeight: 24,
+  },
+  features: {
+    width: '100%',
+    marginBottom: 40,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  featureIcon: {
+    fontSize: 28,
+    marginRight: 16,
+  },
+  featureText: {
+    fontSize: 15,
+    color: '#333',
+    flex: 1,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#50C878',
     paddingHorizontal: 48,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -69,6 +199,23 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  loginButton: {
+    padding: 12,
+  },
+  loginButtonText: {
+    color: '#50C878',
+    fontSize: 15,
     fontWeight: '600',
+  },
+  footer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 13,
+    color: '#999',
+    textAlign: 'center',
   },
 });
