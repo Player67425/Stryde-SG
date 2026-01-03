@@ -69,6 +69,34 @@ export default function OnboardingScreen() {
 
   const saveAndContinue = async () => {
     console.log('[Onboarding] saveAndContinue called, step:', step);
+    
+    // Validate data before proceeding
+    if (step === 1) {
+      if (data.age && (data.age < 12 || data.age > 19)) {
+        Alert.alert('Invalid Age', 'Please enter an age between 12 and 19.');
+        return;
+      }
+      if (data.sleepHours && (data.sleepHours < 1 || data.sleepHours > 24)) {
+        Alert.alert('Invalid Input', 'Please enter sleep hours between 1 and 24.');
+        return;
+      }
+      if (data.height && data.height > 250) {
+        Alert.alert('Invalid Input', 'Please enter a valid height (max 250 cm).');
+        return;
+      }
+      if (data.weight && data.weight > 300) {
+        Alert.alert('Invalid Input', 'Please enter a valid weight (max 300 kg).');
+        return;
+      }
+    }
+    
+    if (step === 2) {
+      if (data.stressLevel && (data.stressLevel < 1 || data.stressLevel > 10)) {
+        Alert.alert('Invalid Input', 'Please enter a stress level between 1 and 10.');
+        return;
+      }
+    }
+    
     if (step < 3) {
       setStep(step + 1);
     } else {
@@ -121,11 +149,13 @@ export default function OnboardingScreen() {
             keyboardType="number-pad" 
             value={data.age?.toString() || ''} 
             onChangeText={(text) => {
-              const age = parseInt(text);
               if (!text) {
-                updateData('age', undefined);
-              } else if (!isNaN(age) && age >= 12 && age <= 19) {
-                updateData('age', age);
+                setData({ ...data, age: undefined });
+              } else {
+                const age = parseInt(text);
+                if (!isNaN(age)) {
+                  setData({ ...data, age });
+                }
               }
             }} 
             placeholder="Enter your age (12-19)" 
@@ -148,11 +178,13 @@ export default function OnboardingScreen() {
             keyboardType="number-pad" 
             value={data.sleepHours?.toString() || ''}
             onChangeText={(text) => {
-              const hours = parseInt(text);
               if (!text) {
-                updateData('sleepHours', undefined);
-              } else if (!isNaN(hours) && hours > 0 && hours <= 24) {
-                updateData('sleepHours', hours);
+                setData({ ...data, sleepHours: undefined });
+              } else {
+                const hours = parseInt(text);
+                if (!isNaN(hours)) {
+                  setData({ ...data, sleepHours: hours });
+                }
               }
             }} 
             placeholder="e.g., 7" 
@@ -166,11 +198,13 @@ export default function OnboardingScreen() {
             keyboardType="number-pad" 
             value={data.height?.toString() || ''}
             onChangeText={(text) => {
-              const height = parseInt(text);
               if (!text) {
-                updateData('height', undefined);
-              } else if (!isNaN(height) && height > 0 && height <= 250) {
-                updateData('height', height);
+                setData({ ...data, height: undefined });
+              } else {
+                const height = parseInt(text);
+                if (!isNaN(height)) {
+                  setData({ ...data, height });
+                }
               }
             }} 
             placeholder="Optional" 
@@ -184,11 +218,13 @@ export default function OnboardingScreen() {
             keyboardType="number-pad" 
             value={data.weight?.toString() || ''}
             onChangeText={(text) => {
-              const weight = parseInt(text);
               if (!text) {
-                updateData('weight', undefined);
-              } else if (!isNaN(weight) && weight > 0 && weight <= 300) {
-                updateData('weight', weight);
+                setData({ ...data, weight: undefined });
+              } else {
+                const weight = parseInt(text);
+                if (!isNaN(weight)) {
+                  setData({ ...data, weight });
+                }
               }
             }} 
             placeholder="Optional" 
@@ -216,11 +252,13 @@ export default function OnboardingScreen() {
             keyboardType="number-pad" 
             value={data.stressLevel?.toString() || ''}
             onChangeText={(text) => {
-              const stress = parseInt(text);
               if (!text) {
-                updateData('stressLevel', undefined);
-              } else if (!isNaN(stress) && stress >= 1 && stress <= 10) {
-                updateData('stressLevel', stress);
+                setData({ ...data, stressLevel: undefined });
+              } else {
+                const stress = parseInt(text);
+                if (!isNaN(stress)) {
+                  setData({ ...data, stressLevel: stress });
+                }
               }
             }} 
             placeholder="1 (low) to 10 (high)" 
