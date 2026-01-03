@@ -1,10 +1,12 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { TouchableOpacity, Alert } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,12 +17,60 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+
+  const handleInfoPress = () => {
+    Alert.alert(
+      'Settings',
+      'What would you like to do?',
+      [
+        {
+          text: 'Redo Onboarding Quiz',
+          onPress: async () => {
+            Alert.alert(
+              'Redo Onboarding?',
+              'This will reset your onboarding answers. Your other data will be kept.',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Redo Quiz',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await storage.remove(STORAGE_KEYS.ONBOARDING);
+                    router.replace('/onboarding');
+                  },
+                },
+              ]
+            );
+          },
+        },
+        {
+          text: 'Replay Tutorial',
+          onPress: () => {
+            router.push('/tutorial');
+          },
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: useClientOnlyValue(false, true),
+        headerRight: () => (
+          <TouchableOpacity onPress={handleInfoPress} style={{ marginRight: 15 }}>
+            <FontAwesome name="info-circle" size={24} color={Colors[colorScheme ?? 'light'].tint} />
+          </TouchableOpacity>
+        ),
       }}>
       <Tabs.Screen
         name="index"
