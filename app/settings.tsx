@@ -133,11 +133,7 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={24} color="#6366f1" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.section}>
@@ -216,7 +212,7 @@ export default function SettingsScreen() {
           <Text style={styles.settingValue}>1.0.0</Text>
         </View>
 
-        <TouchableOpacity style={styles.settingItem}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/privacy')}>
           <View style={styles.settingLeft}>
             <FontAwesome name="file-text" size={20} color="#6366f1" />
             <Text style={styles.settingLabel}>Privacy Policy</Text>
@@ -224,7 +220,7 @@ export default function SettingsScreen() {
           <FontAwesome name="chevron-right" size={16} color="#9ca3af" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/terms')}>
           <View style={styles.settingLeft}>
             <FontAwesome name="shield" size={20} color="#6366f1" />
             <Text style={styles.settingLabel}>Terms of Service</Text>
@@ -261,14 +257,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-  },
-  backButton: {
-    padding: 8,
   },
   headerTitle: {
     fontSize: 20,

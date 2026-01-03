@@ -83,9 +83,6 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={24} color="#6366f1" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
         <TouchableOpacity
           onPress={() => (isEditing ? saveProfile() : setIsEditing(true))}
@@ -189,14 +186,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-  },
-  backButton: {
-    padding: 8,
+    paddingHorizontal: 24,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#111827',
+    flex: 1,
+    textAlign: 'center',
   },
   editButton: {
     padding: 8,
