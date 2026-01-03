@@ -173,6 +173,9 @@ export default function OnboardingScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          <Text style={styles.helperText}>
+            Low: Mostly sitting (e.g., studying, gaming) • Medium: Regular walking or light sports • High: Daily intense exercise or sports training
+          </Text>
 
           <Text style={styles.label}>Average Sleep Hours *</Text>
           <View style={styles.inputWithUnit}>
@@ -331,7 +334,7 @@ const styles = StyleSheet.create({
   stepIndicator: { fontSize: 14, color: '#fff', opacity: 0.9 },
   section: { padding: 20, flexGrow: 1 },
   label: { fontSize: 16, fontWeight: '600', marginTop: 16, marginBottom: 8, color: '#333' },
-  helperText: { fontSize: 13, color: '#666', fontStyle: 'italic', marginBottom: 4 },
+  helperText: { fontSize: 13, color: '#666', fontStyle: 'italic', marginBottom: 4, marginTop: 8, lineHeight: 18 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
   inputWithUnit: { 
     flexDirection: 'row', 
