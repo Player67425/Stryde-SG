@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   JOURNAL: '@stryde_journal',
   AI_HISTORY: '@stryde_ai_history',
   TARGETS: '@stryde_targets',
+  EVENT_RSVPS: '@stryde_event_rsvps',
 };
 
 export const storage = {
