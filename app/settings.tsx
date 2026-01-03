@@ -26,7 +26,7 @@ export default function SettingsScreen() {
 
   const loadSettings = async () => {
     try {
-      const saved = await storage.get('appSettings');
+      const saved = await storage.load('appSettings');
       if (saved) {
         setSettings(saved);
       }
@@ -37,6 +37,16 @@ export default function SettingsScreen() {
 
   const saveSetting = async (key: string, value: boolean) => {
     try {
+      // Dark mode is a future feature - show alert
+      if (key === 'darkMode') {
+        Alert.alert(
+          'Coming Soon',
+          'Dark mode is a planned feature that will be available in a future update!',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
       const newSettings = { ...settings, [key]: value };
       await storage.save('appSettings', newSettings);
       setSettings(newSettings);
@@ -54,8 +64,14 @@ export default function SettingsScreen() {
         {
           text: 'Edit Answers',
           onPress: async () => {
-            await storage.remove(STORAGE_KEYS.ONBOARDING);
-            router.replace('/onboarding');
+            try {
+              await storage.remove(STORAGE_KEYS.ONBOARDING);
+              await storage.remove('@stryde_onboarding_complete');
+              router.replace('/onboarding');
+            } catch (error) {
+              console.error('Error removing onboarding data:', error);
+              Alert.alert('Error', 'Failed to reset onboarding');
+            }
           },
         },
       ]
@@ -72,9 +88,15 @@ export default function SettingsScreen() {
           text: 'Reset & Redo',
           style: 'destructive',
           onPress: async () => {
-            await storage.remove(STORAGE_KEYS.ONBOARDING);
-            await storage.remove('tutorialComplete');
-            router.replace('/onboarding');
+            try {
+              await storage.remove(STORAGE_KEYS.ONBOARDING);
+              await storage.remove('@stryde_onboarding_complete');
+              await storage.remove('@stryde_tutorial_complete');
+              router.replace('/onboarding');
+            } catch (error) {
+              console.error('Error resetting data:', error);
+              Alert.alert('Error', 'Failed to reset');
+            }
           },
         },
       ]
@@ -96,7 +118,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await storage.clearAll();
+              await storage.clear();
               Alert.alert('Success', 'All data cleared successfully');
               router.replace('/');
             } catch (error) {
