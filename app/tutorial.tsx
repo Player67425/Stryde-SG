@@ -37,7 +37,7 @@ export default function TutorialScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Getting Started</Text>
+        <Text style={styles.headerTitle}>Tutorial</Text>
         <TouchableOpacity onPress={completeTutorial}>
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>

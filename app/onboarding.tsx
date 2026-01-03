@@ -136,8 +136,7 @@ export default function OnboardingScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome to Stryde SG</Text>
-        <Text style={styles.subtitle}>Empowering teens to flourish—one Stryde at a time</Text>
+        <Text style={styles.title}>Onboarding Quiz</Text>
         <Text style={styles.stepIndicator}>Step {step} of 3</Text>
       </View>
 
