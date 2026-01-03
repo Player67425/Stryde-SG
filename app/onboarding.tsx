@@ -17,9 +17,9 @@ export default function OnboardingScreen() {
   const updateData = (field: string, value: any) => {
     console.log(`[Onboarding] Updating ${field}:`, value);
     
-    // Validate numeric inputs
+    // Validate numeric inputs (now supporting decimals for height, weight, sleepHours)
     if (['age', 'sleepHours', 'stressLevel', 'height', 'weight'].includes(field)) {
-      const numValue = parseInt(value);
+      const numValue = parseFloat(value);
       
       // Validate ranges
       if (field === 'age') {
@@ -175,64 +175,82 @@ export default function OnboardingScreen() {
           </View>
 
           <Text style={styles.label}>Average Sleep Hours *</Text>
-          <TextInput 
-            style={styles.input} 
-            keyboardType="number-pad" 
-            value={data.sleepHours?.toString() || ''}
-            onChangeText={(text) => {
-              // Allow empty string or valid numbers
-              if (text === '') {
-                setData({ ...data, sleepHours: undefined });
-              } else {
-                const hours = parseInt(text);
-                if (!isNaN(hours) && hours >= 0) {
-                  setData({ ...data, sleepHours: hours });
+          <View style={styles.inputWithUnit}>
+            <TextInput 
+              style={styles.inputWithUnitField} 
+              keyboardType="decimal-pad" 
+              value={data.sleepHours?.toString() || ''}
+              onChangeText={(text) => {
+                // Allow empty string, numbers, and one decimal point
+                if (text === '') {
+                  setData({ ...data, sleepHours: undefined });
+                } else if (/^\d*\.?\d*$/.test(text)) {
+                  const hours = parseFloat(text);
+                  if (!isNaN(hours) && hours >= 0) {
+                    setData({ ...data, sleepHours: hours });
+                  } else if (text.endsWith('.')) {
+                    // Allow trailing decimal point while typing
+                    setData({ ...data, sleepHours: parseFloat(text.slice(0, -1)) || 0 });
+                  }
                 }
-              }
-            }} 
-            placeholder="e.g, 7h" 
-            maxLength={2}
-          />
+              }} 
+              placeholder="e.g, 7" 
+              maxLength={4}
+            />
+            {data.sleepHours && <Text style={styles.unitLabel}>h</Text>}
+          </View>
 
           <Text style={styles.label}>Height (cm) *</Text>
-          <TextInput 
-            style={styles.input} 
-            keyboardType="number-pad" 
-            value={data.height?.toString() || ''}
-            onChangeText={(text) => {
-              // Allow empty string or valid numbers
-              if (text === '') {
-                setData({ ...data, height: undefined });
-              } else {
-                const height = parseInt(text);
-                if (!isNaN(height) && height >= 0) {
-                  setData({ ...data, height });
+          <View style={styles.inputWithUnit}>
+            <TextInput 
+              style={styles.inputWithUnitField} 
+              keyboardType="decimal-pad" 
+              value={data.height?.toString() || ''}
+              onChangeText={(text) => {
+                // Allow empty string, numbers, and one decimal point
+                if (text === '') {
+                  setData({ ...data, height: undefined });
+                } else if (/^\d*\.?\d*$/.test(text)) {
+                  const height = parseFloat(text);
+                  if (!isNaN(height) && height >= 0) {
+                    setData({ ...data, height });
+                  } else if (text.endsWith('.')) {
+                    // Allow trailing decimal point while typing
+                    setData({ ...data, height: parseFloat(text.slice(0, -1)) || 0 });
+                  }
                 }
-              }
-            }} 
-            placeholder="e.g, 175cm" 
-            maxLength={3}
-          />
+              }} 
+              placeholder="e.g, 175" 
+              maxLength={5}
+            />
+            {data.height && <Text style={styles.unitLabel}>cm</Text>}
+          </View>
 
           <Text style={styles.label}>Weight (kg) *</Text>
-          <TextInput 
-            style={styles.input} 
-            keyboardType="number-pad" 
-            value={data.weight?.toString() || ''}
-            onChangeText={(text) => {
-              // Allow empty string or valid numbers
-              if (text === '') {
-                setData({ ...data, weight: undefined });
-              } else {
-                const weight = parseInt(text);
-                if (!isNaN(weight) && weight >= 0) {
-                  setData({ ...data, weight });
+          <View style={styles.inputWithUnit}>
+            <TextInput 
+              style={styles.inputWithUnitField} 
+              keyboardType="decimal-pad" 
+              value={data.weight?.toString() || ''}
+              onChangeText={(text) => {
+                // Allow empty string, numbers, and one decimal point
+                if (text === '') {
+                  setData({ ...data, weight: undefined });
+                } else if (/^\d*\.?\d*$/.test(text)) {
+                  const weight = parseFloat(text);
+                  if (!isNaN(weight) && weight >= 0) {
+                    setData({ ...data, weight });
+                  } else if (text.endsWith('.')) {
+                    // Allow trailing decimal point while typing
+                    setData({ ...data, weight: parseFloat(text.slice(0, -1)) || 0 });
+                  }
                 }
-              }
-            }} 
-            placeholder="e.g, 67kg" 
-            maxLength={3}
-          />
+              }} 
+              placeholder="e.g, 67" 
+              maxLength={5}
+            />
+            {data.weight && <Text style={styles.unitLabel}>kg</Text>}
+          </View>
 
           <Text style={styles.label}>Sex</Text>
           <Text style={styles.helperText}>ⓘ Highly recommended for accurate targets and insights</Text>
@@ -315,6 +333,26 @@ const styles = StyleSheet.create({
   label: { fontSize: 16, fontWeight: '600', marginTop: 16, marginBottom: 8, color: '#333' },
   helperText: { fontSize: 13, color: '#666', fontStyle: 'italic', marginBottom: 4 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
+  inputWithUnit: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    borderRadius: 8, 
+    backgroundColor: '#fff',
+    paddingRight: 12
+  },
+  inputWithUnitField: { 
+    flex: 1, 
+    padding: 12, 
+    fontSize: 16 
+  },
+  unitLabel: { 
+    fontSize: 16, 
+    color: '#666', 
+    fontWeight: '500',
+    marginLeft: 4
+  },
   buttonGroup: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   optionButton: { flex: 1, minWidth: 80, padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center' },
   optionButtonSelected: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
