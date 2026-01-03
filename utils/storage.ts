@@ -12,6 +12,13 @@ const STORAGE_KEYS = {
   AI_HISTORY: '@stryde_ai_history',
   TARGETS: '@stryde_targets',
   EVENT_RSVPS: '@stryde_event_rsvps',
+  ACHIEVEMENTS: '@stryde_achievements',
+  TRACK_LOGS: '@stryde_track_logs',
+  REFLECT_ENTRIES: '@stryde_reflect_entries',
+  USER_PROFILE: '@stryde_user_profile',
+  APP_SETTINGS: '@stryde_app_settings',
+  NOTIFICATIONS: '@stryde_notifications',
+  STREAKS: '@stryde_streaks',
 };
 
 export const storage = {
