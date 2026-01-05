@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
-import { aiKnowledgeBase } from '@/data/content';
-
-type AIMode = 'Ask' | 'Coach' | 'Scan' | 'Support' | 'Navigator';
+import { aiEngine } from '@/utils/aiEngine';
 
 export default function AICoachScreen() {
-  const [mode, setMode] = useState<AIMode>('Ask');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<any[]>([
-    { id: '1', role: 'assistant', content: 'Hi! I\'m your AI Coach. Choose a mode:\n• Ask: Questions\n• Coach: Personalized guidance\n• Scan: Check misinformation\n• Support: Motivation\n• Navigator: Find features\n\nWhat would you like?', timestamp: new Date().toISOString() },
+    { id: '1', role: 'assistant', content: 'Hi! I\'m your Ultimate AI Coach powered by Stryde SG\'s comprehensive knowledge base. 💪\n\nI can help you with:\n🥗 Nutrition questions\n🏋️ Exercise guidance\n😴 Sleep & stress advice\n🇸🇬 Singapore food tips\n🔍 Myth-busting\n🧭 App navigation\n🌟 Motivation & support\n🎯 Goal setting\n\nAsk me anything about health and wellness!', timestamp: new Date().toISOString() },
   ]);
 
   useEffect(() => {
@@ -23,115 +20,107 @@ export default function AICoachScreen() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-    const userMessage = { id: Date.now().toString(), role: 'user', content: input.trim(), timestamp: new Date().toISOString() };
+    
+    const userMessage = { 
+      id: Date.now().toString(), 
+      role: 'user', 
+      content: input.trim(), 
+      timestamp: new Date().toISOString() 
+    };
+    
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
-    const aiResponse = generateAIResponse(input.trim(), mode);
-    const assistantMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: aiResponse, timestamp: new Date().toISOString() };
+    
+    // Generate AI response using the AI engine
+    const aiResponse = aiEngine.generateResponse(input.trim(), {
+      mode: 'unified', // Unified mode that handles everything
+      conversationHistory: messages
+    });
+    
+    const assistantMessage = { 
+      id: (Date.now() + 1).toString(), 
+      role: 'assistant', 
+      content: aiResponse, 
+      timestamp: new Date().toISOString() 
+    };
+    
     const updatedMessages = [...newMessages, assistantMessage];
     setMessages(updatedMessages);
     await storage.save(STORAGE_KEYS.AI_HISTORY, updatedMessages);
   };
 
-  const generateAIResponse = (query: string, currentMode: AIMode): string => {
-    const lowerQuery = query.toLowerCase();
-    
-    // Safety guardrails
-    if (lowerQuery.includes('starve') || lowerQuery.includes('skip meals') || lowerQuery.includes('extreme diet')) {
-      return aiKnowledgeBase.safety.refusal_disordered_eating;
-    }
-    if (lowerQuery.includes('harm myself')) {
-      return aiKnowledgeBase.safety.refusal_self_harm;
-    }
-
-    // Scan Mode - Misinformation Scanner
-    if (currentMode === 'Scan') {
-      if (lowerQuery.includes('carbs') && lowerQuery.includes('fat')) {
-        return '🔴 MYTH\\n\\nCarbs don\'t make you fat. Excess calories from any source can lead to weight gain. Carbs fuel your brain!\\n\\n📚 Learn more in "Myths & Misinformation Toolkit" module.';
-      }
-      return '🟡 PARTIAL / NEEDS CONTEXT\\n\\nI need more details to evaluate this claim.';
-    }
-
-    // Navigator Mode
-    if (currentMode === 'Navigator') {
-      if (lowerQuery.includes('quiz') || lowerQuery.includes('learn')) {
-        return '📚 Quizzes are in the Learn tab! Check out the 8 beginner modules.\\n\\nGo to: Learn tab → Choose a module → Scroll to quiz';
-      }
-      if (lowerQuery.includes('track') || lowerQuery.includes('log')) {
-        return '📊 Daily logging is in the Track tab!\\n\\nGo to: Track tab → "Log Today\'s Data" button';
-      }
-    }
-
-    // Topic-based responses
-    if (lowerQuery.includes('protein')) {
-      return '🥩 Protein:\\n\\n' + aiKnowledgeBase.nutrition.protein + '\\n\\n💡 Next: Track your protein in the Track tab!\\n\\n⚠️ Not medical advice.';
-    }
-    if (lowerQuery.includes('carb')) {
-      return '🍚 Carbs:\\n\\n' + aiKnowledgeBase.nutrition.carbs + '\\n\\n💡 Next: Learn more in modules!\\n\\n⚠️ Not medical advice.';
-    }
-    if (lowerQuery.includes('sleep')) {
-      return '💤 Sleep for Teens:\\n\\nTeens need 8-10 hours nightly. Poor sleep increases hunger and affects mood.\\n\\n💡 Next: Track sleep in Track tab!\\n\\n⚠️ Not medical advice.';
-    }
-    if (lowerQuery.includes('bubble tea')) {
-      return '🧋 Bubble Tea:\\n\\n' + aiKnowledgeBase.singapore_food.bubble_tea + '\\n\\n💡 Smart choice: 0-50% sugar!\\n\\n⚠️ Not medical advice.';
-    }
-    if (lowerQuery.includes('chicken rice')) {
-      return '🍗 Chicken Rice:\\n\\n' + aiKnowledgeBase.singapore_food.chicken_rice + '\\n\\n⚠️ Not medical advice.';
-    }
-
-    // Support Mode
-    if (currentMode === 'Support') {
-      return '🌟 You\'re doing great by being here! Health is a journey, not a destination.\\n\\nRemember:\\n• Progress > Perfection\\n• Small steps > Big unrealistic changes\\n• Your worth isn\'t tied to numbers\\n\\nWhat support do you need?\\n\\n⚠️ Not medical advice.';
-    }
-
-    // Coach Mode
-    if (currentMode === 'Coach') {
-      return '🎯 Personalized Guidance:\\n\\nFocus on:\\n1. Consistent sleep (8-10 hours)\\n2. Eat enough to support growth\\n3. Move daily\\n4. Stay hydrated\\n5. Reflect and manage stress\\n\\nWhat aspect to work on?\\n\\n⚠️ Not medical advice.';
-    }
-
-    // Default
-    return 'Great question! Check the Learn tab for science-backed modules. Use Track to monitor patterns. I\'m here to help!\\n\\n⚠️ Not medical advice.';
-  };
-
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+      keyboardVerticalOffset={90}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>AI Coach</Text>
-        <Text style={styles.subtitle}>Your personal health guide</Text>
+        <Text style={styles.title}>🤖 Ultimate AI Coach</Text>
+        <Text style={styles.subtitle}>Powered by Stryde SG Knowledge Base</Text>
       </View>
-      <View style={styles.modeSelector}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {(['Ask', 'Coach', 'Scan', 'Support', 'Navigator'] as AIMode[]).map((m) => (
-            <TouchableOpacity key={m} style={[styles.modeButton, mode === m && styles.modeButtonActive]} onPress={() => setMode(m)}>
-              <Text style={[styles.modeButtonText, mode === m && styles.modeButtonTextActive]}>{m}</Text>
-            </TouchableOpacity>
-          ))}
+
+      <View style={styles.featureBar}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featureContent}>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🥗 Nutrition</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🏋️ Exercise</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>😴 Sleep</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🔍 Myths</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🇸🇬 SG Food</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🎯 Goals</Text>
+          </View>
+          <View style={styles.featureChip}>
+            <Text style={styles.featureChipText}>🧭 Navigate</Text>
+          </View>
         </ScrollView>
       </View>
-      <View style={styles.modeInfo}>
-        <Text style={styles.modeInfoText}>
-          {mode === 'Ask' && '💬 Ask me anything about nutrition, exercise, or health'}
-          {mode === 'Coach' && '🎯 Get personalized guidance'}
-          {mode === 'Scan' && '🔍 Check if health claims are true or myths'}
-          {mode === 'Support' && '🌟 Get motivation and support'}
-          {mode === 'Navigator' && '🧭 Find features in the app'}
-        </Text>
-      </View>
-      <ScrollView style={styles.chatArea} contentContainerStyle={styles.chatContent}>
+
+      <ScrollView 
+        style={styles.chatArea} 
+        contentContainerStyle={styles.chatContent}
+        ref={(ref) => ref?.scrollToEnd({ animated: true })}
+      >
         {messages.map((msg) => (
           <View key={msg.id} style={[styles.message, msg.role === 'user' ? styles.userMessage : styles.aiMessage]}>
-            <Text style={[styles.messageText, msg.role === 'user' ? styles.userMessageText : styles.aiMessageText]}>{msg.content}</Text>
+            <Text style={[styles.messageText, msg.role === 'user' ? styles.userMessageText : styles.aiMessageText]}>
+              {msg.content}
+            </Text>
           </View>
         ))}
       </ScrollView>
+
       <View style={styles.inputArea}>
-        <TextInput style={styles.input} value={input} onChangeText={setInput} placeholder={`Type in ${mode} mode...`} multiline maxLength={500} />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TextInput 
+          style={styles.input} 
+          value={input} 
+          onChangeText={setInput} 
+          placeholder="Ask me anything about health & wellness..."
+          placeholderTextColor="#999"
+          multiline 
+          maxLength={500}
+        />
+        <TouchableOpacity 
+          style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]} 
+          onPress={sendMessage}
+          disabled={!input.trim()}
+        >
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.disclaimer}>⚠️ Not medical advice • Powered by local knowledge base</Text>
+      
+      <Text style={styles.disclaimer}>⚠️ Not medical advice • AI-powered by app modules</Text>
     </KeyboardAvoidingView>
   );
 }
