@@ -65,9 +65,14 @@ export default function SettingsScreen() {
           text: 'Edit Answers',
           onPress: async () => {
             try {
+              // Remove onboarding data - this will make the app show onboarding again
               await storage.remove(STORAGE_KEYS.ONBOARDING);
-              await storage.remove('@stryde_onboarding_complete');
-              router.replace('/onboarding');
+              Alert.alert('Success', 'Onboarding reset. You will be redirected.', [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/onboarding')
+                }
+              ]);
             } catch (error) {
               console.error('Error removing onboarding data:', error);
               Alert.alert('Error', 'Failed to reset onboarding');
@@ -89,13 +94,18 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Remove onboarding and tutorial completion flags
               await storage.remove(STORAGE_KEYS.ONBOARDING);
-              await storage.remove('@stryde_onboarding_complete');
-              await storage.remove('@stryde_tutorial_complete');
-              router.replace('/onboarding');
+              await storage.remove(STORAGE_KEYS.TUTORIAL_COMPLETE);
+              Alert.alert('Success', 'Onboarding and tutorial reset. You will be redirected.', [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/onboarding')
+                }
+              ]);
             } catch (error) {
               console.error('Error resetting data:', error);
-              Alert.alert('Error', 'Failed to reset');
+              Alert.alert('Error', 'Failed to reset. Please try again.');
             }
           },
         },
